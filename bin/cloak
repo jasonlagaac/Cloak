@@ -1,0 +1,117 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.dirname(__FILE__) + '/../lib' 
+require 'rubygems'
+require 'commander/import'
+require 'highline'
+require 'bcrypt'
+require 'cloak'
+
+
+## 
+#Setup Information
+program :version, Cloak::VERSION
+program :description, %q{ 
+    CLOAK is a simple password storage and reminder
+    system that stores all your credentials in an 
+    encrypted format using the Blowfish cipher. So all 
+    you need now is to remember a single password.
+
+    DISCLAIMER:
+    Even though Blowfish is not broken, I'd like to say 
+    that I would not want to save really sensitive data 
+    using Cloak. Maybe just some non-trivial stuff, like 
+    twitter or logins that don't really matter. 
+    
+    !!! USE AT YOUR OWN RISK !!!
+}
+
+
+default_command :help
+list = Cloak::List.new
+
+command :init do |c|
+  c.summary = 'Initialise cloak'
+  c.syntax = 'cloak init'
+  c.description = 'Initialise cloak'
+
+  c.action do |args, options|
+    begin
+        file_path = File.expand_path("~/.cloak_password")
+        if !File.exist?(file_path)
+          cloak_password = ask("Please enter your cloak password: ") { |q| q.echo = false }
+          cloak_password_confirm = ask("Please reconfirm your cloak password: ") { |q| q.echo = false }
+        
+          if (cloak_password.eql?(cloak_password_confirm))
+            password = BCrypt::Password.create(cloak_password)
+            File.open(file_path, "w") do |file|
+              file.write(password)
+            end
+            Cloak::List.new
+            say "Cloak successfully configured"
+          else
+            raise "Error: Your passwords do not match"
+          end
+        else
+          raise "Error: Cloak is already configured"
+        end
+    rescue Exception => e
+      puts e.message
+    end
+  end
+
+end
+
+command :add do |c|
+  c.summary = 'Add a new entry' 
+  c.syntax = 'cloak add \'<item description>\'' 
+  c.description = 'Add a new entry to the list'
+  
+  c.action do |args, options|
+    cloak_password = ask("Please enter your cloak password: ") { |q| q.echo = false }
+
+    if (Cloak.verify_password(cloak_password)) 
+      description = ask("Please enter a description: ")
+      password_stored = ask("Please enter the password to be stored: ") { |q| q.echo = false }
+      password_stored_reconfirm = ask("Please reconfirm the password to be stored: ") { |q| q.echo = false }
+
+      password_stored = password_stored.chomp
+      password_stored_reconfirm = password_stored_reconfirm.chomp
+    
+      if (password_stored.eql?(password_stored_reconfirm))
+        entry = Cloak::Entry.new(description)
+        entry.encrypt(password_stored, cloak_password)
+        
+        say "#{list.nil?}"
+
+        list << entry
+        list.save
+        say "\"#{entry}\" - Added"
+      else
+        say "1: #{password_stored}"
+        say "2: #{password_stored_reconfirm}"
+        say "ERROR: The passwords to be stored do not match. Please try again."
+      end
+    end
+  end
+end
+
+command :edit do |c|
+  c.summary = 'Edit an existing entry'
+
+end
+
+command :list do |c|
+  c.summary = 'List all entries'
+
+end
+
+command :remove do |c|
+  c.summary = 'Remove an entry'
+
+end
+
+command :removeall do |c|
+  c.summary = 'Remove all entries'
+
+end
