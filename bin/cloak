@@ -39,8 +39,8 @@ command :init do |c|
     begin
         file_path = File.expand_path("~/.cloak_password")
         if !File.exist?(file_path)
-          cloak_password = ask("Please enter your cloak password: ") { |q| q.echo = false }
-          cloak_password_confirm = ask("Please reconfirm your cloak password: ") { |q| q.echo = false }
+          cloak_password = password "Please enter your cloak password: ", ""
+          cloak_password_confirm = password "Please confirm your cloak password: ", ""
         
           if (cloak_password.eql?(cloak_password_confirm))
             password = BCrypt::Password.create(cloak_password)
@@ -68,50 +68,94 @@ command :add do |c|
   c.description = 'Add a new entry to the list'
   
   c.action do |args, options|
-    cloak_password = ask("Please enter your cloak password: ") { |q| q.echo = false }
+    begin
+      raise "Please enter a valid Description. Eg: cloak add \"Twitter Password\"" if (args.count == 0)
 
-    if (Cloak.verify_password(cloak_password)) 
-      description = ask("Please enter a description: ")
-      password_stored = ask("Please enter the password to be stored: ") { |q| q.echo = false }
-      password_stored_reconfirm = ask("Please reconfirm the password to be stored: ") { |q| q.echo = false }
+      cloak_password = password "Please enter your cloak password: ", ""
 
-      password_stored = password_stored.chomp
-      password_stored_reconfirm = password_stored_reconfirm.chomp
-    
-      if (password_stored.eql?(password_stored_reconfirm))
-        entry = Cloak::Entry.new(description)
-        entry.encrypt(password_stored, cloak_password)
-        
-        say "#{list.nil?}"
-
-        list << entry
-        list.save
-        say "\"#{entry}\" - Added"
-      else
-        say "1: #{password_stored}"
-        say "2: #{password_stored_reconfirm}"
-        say "ERROR: The passwords to be stored do not match. Please try again."
+      if (Cloak.verify_password(cloak_password)) 
+        password_stored = password "Please enter the password to be stored: ", ""
+        password_stored_confirm = password "Please confirm the password to be stored: ", ""
+      
+        if (password_stored.chomp.eql?(password_stored_confirm.chomp))
+          entry = Cloak::Entry.new(args.first)
+          entry.encrypt(password_stored, cloak_password)
+          
+          list << entry
+          list.save
+          say "\"#{entry.description}\" - Added"
+        else
+           raise "The passwords to be stored do not match. Please try again."
+        end
       end
+    rescue Exception => e
+      say e.message + "\n"
     end
   end
-end
-
-command :edit do |c|
-  c.summary = 'Edit an existing entry'
 
 end
 
 command :list do |c|
   c.summary = 'List all entries'
+  c.syntax = "cloak list"
+  c.description = "List all entries stored"
+
+  c.action do |args, options|
+    begin
+
+      cloak_password = password "Please enter your cloak password: ", ""
+
+      if (Cloak.verify_password(cloak_password))
+          list.entries.each_with_index do | entry, i |
+            say '%2d. %-45s : %s' % [i, entry.description, entry.decrypt(cloak_password)]
+          end
+      end
+    rescue Exception
+      puts ""
+    end
+  end
 
 end
 
 command :remove do |c|
   c.summary = 'Remove an entry'
+  c.syntax = 'cloak remove <item number>'
+  c.description = 'Remove an entry from the list'
+
+  c.action do |args, options|
+    begin
+      cloak_password = password "Please enter your cloak password: ", ""
+
+      raise "Invalid entry: " + args.first + " - Please try again." if !list.entries.at(args.first.to_i)
+
+      if (Cloak.verify_password(cloak_password))
+          entry = list.entries.delete_at(args.first.to_i)
+          list.save
+          say entry.description + " - removed"
+      end
+    rescue  Exception => e
+      puts e
+    end
+  end
 
 end
 
-command :removeall do |c|
+command :clear do |c|
   c.summary = 'Remove all entries'
+  c.syntax = 'cloak clear'
+  c.description = 'Remove all entries'
+
+  c.action do |args, options|
+    begin
+      cloak_password = password "Please enter your cloak password: ", ""
+
+      if (Cloak.verify_password(cloak_password))
+        list.entries.clear
+        list.save
+      end
+    rescue Exception
+      puts ""
+    end
+  end
 
 end

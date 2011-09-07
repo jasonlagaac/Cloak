@@ -23,6 +23,9 @@ Jeweler::Tasks.new do |gem|
   gem.description = %Q{Cloak is a simple encrypted password storage system which uses crypt}
   gem.email = "jason.lagaac@me.com"
   gem.authors = ["Jason Lagaac"]
+
+  gem.executables << "cloak"
+
   # dependencies defined in Gemfile
 
   gem.files =  FileList["[A-Z]*", "{bin,generators,lib,test}/**/*", 'lib/jeweler/templates/.gitignore']
