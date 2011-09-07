@@ -1,6 +1,57 @@
-= cloak
+= Cloak
 
-Description goes here.
+CLOAK is a simple encrypted password storage system.
+It allows users to store passwords and don't have to
+continually remember them. Just fire it up and it'll
+tell you :)
+
+== Installation
+
+  $ gem install cloak
+
+== Getting Started 
+
+To start using CLOAK, you have to initialise it first.
+
+  $ cloak init
+
+This will then prompt you for a password to secure access
+to your cloak entries. This command also creates two files
+.cloak_password (Your password hash) and .cloak
+
+== Adding Entires
+
+To add an entry, do the following:
+
+  $ cloak add "A Password That I NEED to Remember"
+
+This will then prompt your for your cloak password and ask for the password to be secured.
+Cloak will then encrypt the entry. Done.
+
+
+== View Entries
+
+To view your passwords:
+
+  $ cloak list
+
+This will show you all your entries
+
+== Remove an Entry
+
+To remove an entry:
+
+  $ cloak remove <entry number in list>
+
+Usually you'd list them first and see the ones that you want to delete.
+
+== Clear all Entries
+
+To clear / purge all stored entries
+
+  $ cloak clear 
+
+
 
 == Contributing to cloak
  

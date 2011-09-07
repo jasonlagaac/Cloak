@@ -11,7 +11,7 @@ require 'cloak'
 ## 
 #Setup Information
 program :version, Cloak::VERSION
-program :description, %q{ 
+program :description, "
     CLOAK is a simple password storage and reminder
     system that stores all your credentials in an 
     encrypted format using the Blowfish cipher. So all 
@@ -24,7 +24,17 @@ program :description, %q{
     twitter or logins that don't really matter. 
     
     !!! USE AT YOUR OWN RISK !!!
-}
+"
+
+program :help, 'Getting Started', "
+    To get started with cloak, please execute the following:
+
+        cloak init
+    
+    This will initialise your password and the necessary files.
+"
+
+program :help, 'Author', "Jason Lagaac <lagaac.j@gmail.com>"
 
 
 default_command :help
